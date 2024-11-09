@@ -27,6 +27,8 @@ serve({
         if (url.endsWith("index.html")) {
             url = url.split("index.html").join('garn.dev');
         }
+        console.log(url);
+
         const nextUrl = new URL(join(url, "./index.html"));
         return Response.redirect(nextUrl, 302);
     },
