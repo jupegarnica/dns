@@ -8,7 +8,7 @@ import {
 import { Dns, resolveDns } from "./resolveDns.jsx";
 
 serve({
-    "/:slug": async (_, connInfo, params) => {
+    "/:slug": async (_, _connInfo, params) => {
 
         const domain = params?.slug ?? "garn.dev";
 
