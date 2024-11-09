@@ -33,8 +33,6 @@ export async function resolveDns(hostname) {
   for (const type of types) {
     try {
       result[type] = await Deno.resolveDns(hostname, type);
-      console.log({ type, result: result[type] });
-
       if (result[type]?.length === 0) {
         delete result[type];
       }
@@ -55,10 +53,9 @@ export async function resolveDns(hostname) {
 
 
     } catch (error) {
-      console.error(error);
+      //console.error(error);
     }
   }
-  console.log({ result });
 
   return result;
 }
