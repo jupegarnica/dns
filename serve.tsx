@@ -1,19 +1,17 @@
-/** @jsx h */
-import {
-    h,
-    jsx,
-    serve,
-} from "https://deno.land/x/sift@0.6.0/mod.ts";
+import { Hono } from 'hono';
+import { Dns, resolveDns } from './resolveDns.jsx';
 
-import { Dns, resolveDns } from "./resolveDns.jsx";
+const app = new Hono();
 
-serve({
-    "/:slug": async (_, _connInfo, params) => {
 
-        const domain = params?.slug ?? "garn.dev";
-
-        return jsx(<Dns records={await resolveDns(domain)} domain={domain} />);
-    },
-}, {
-
+app.get('/:slug', async (c) => {
+  const domain = c.req.param('slug') ?? 'garn.dev';
+  const records = await resolveDns(domain);
+  return c.html(<Dns records={records} domain={domain} />);
 });
+
+app.use('/', async (c) => {
+    return c.redirect('/garn.dev');
+});
+
+Deno.serve(app.fetch);

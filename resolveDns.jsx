@@ -1,6 +1,3 @@
-/** @jsx h */
-import { h } from "https://deno.land/x/sift@0.6.0/mod.ts";
-
 const types = [
   `A`,
   `AAAA`,
@@ -31,18 +28,38 @@ const types = [
 ];
 
 export async function resolveDns(hostname) {
-  console.log({ hostname });
-
   const result = {};
 
   for (const type of types) {
     try {
       result[type] = await Deno.resolveDns(hostname, type);
+      console.log({ type, result: result[type] });
+
+      if (result[type]?.length === 0) {
+        delete result[type];
+      }
+
+      if (Array.isArray(result[type][0])) {
+        result[type] = result[type].map((record) => {
+          const [...items] = record;
+          return items.join(" ");
+        });
+      }
+
+      if (typeof result[type][0] !== "string") {
+        result[type] = result[type].map((record) => {
+          const { exchange, preference } = record;
+          return `${exchange} (Preference: ${preference})`;
+        });
+      }
+
+
     } catch (error) {
       console.error(error);
     }
   }
   console.log({ result });
+
   return result;
 }
 
@@ -68,10 +85,10 @@ export const Dns = ({ records, domain }) => {
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-              {arr.map(([record, ip]) => (
+              {arr.map(([record, ips]) => (
                 <tr>
-                  <td class="px-4 py-2">{record}</td>
-                  <td class="px-4 py-2">{ip}</td>
+                  <td class="px-4 py-2">{(record)}</td>
+                  {ips.map((ip) => (<td class="px-4 py-2">{ip}</td>))}
                 </tr>
               ))}
             </tbody>
