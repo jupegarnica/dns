@@ -25,7 +25,7 @@ serve({
     404: (req: Request) => {
         let url = req.url;
         if (url.endsWith("index.html")) {
-            url = url.split("index.html").join('');
+            url = url.split("index.html").join('garn.dev');
         }
         const nextUrl = new URL(join(url, "./index.html"));
         return Response.redirect(nextUrl, 302);
