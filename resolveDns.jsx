@@ -33,7 +33,8 @@ export async function resolveDns(hostname) {
   for (const type of types) {
     try {
       result[type] = await Deno.resolveDns(hostname, type);
-      if (result[type]?.length === 0) {
+
+      if (!result[type]?.length) {
         delete result[type];
       }
 
