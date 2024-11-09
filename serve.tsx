@@ -23,10 +23,11 @@ serve({
     },
 
     404: (req: Request) => {
-        if (req.url.endsWith("index.html")) {
-            return jsx(<NotFound />, { status: 404 });
+        let url = req.url;
+        if (url.endsWith("index.html")) {
+            url = url.split("index.html").join('');
         }
-        const nextUrl = new URL(join(req.url, "./index.html"));
+        const nextUrl = new URL(join(url, "./index.html"));
         return Response.redirect(nextUrl, 302);
     },
 }, {
