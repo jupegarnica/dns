@@ -4,52 +4,66 @@ const types = [
   `CNAME`,
   `TXT`,
   `MX`,
-  // `ANAME`,
-  // `ANY`,
-  // `AXFR`,
-  // `CAA`,
-  // `HINFO`,
-  // `HTTPS`,
-  // `IXFR`,
-  // `NAPTR`,
-  // `NS`,
-  // `NULL`,
-  // `OPENPGPKEY`,
-  // `OPT`,
-  // `PTR`,
-  // `SOA`,
-  // `SRV`,
-  // `SSHFP`,
-  // `SVCB`,
-  // `TLSA`,
-  // `DNSSEC`,
-  // `Unknown`,
-  // `ZERO`
 ];
+
+// Los mismos tipos que usaba Deno.resolveDns, resueltos por DNS-over-HTTPS.
+const TYPE_CODES = {
+  A: 1,
+  AAAA: 28,
+  CNAME: 5,
+  TXT: 16,
+  MX: 15,
+};
+
+function stripTxtQuotes(data) {
+  const chunks = String(data).match(/"((?:[^"\\]|\\.)*)"/g);
+  if (!chunks) return String(data);
+  return chunks
+    .map((chunk) =>
+      chunk
+        .slice(1, -1)
+        .replace(/\\"/g, `"`)
+        .replace(/\\\\/g, `\\`)
+    )
+    .join(" ");
+}
 
 export async function resolveDns(hostname) {
   const result = {};
 
   for (const type of types) {
     try {
-      result[type] = await Deno.resolveDns(hostname, type);
+      const response = await fetch(
+        `https://cloudflare-dns.com/dns-query?name=${
+          encodeURIComponent(hostname)
+        }&type=${type}`,
+        { headers: { accept: `application/dns-json` } },
+      );
 
-      if (!result[type]?.length) {
-        delete result[type];
+      if (!response.ok) continue;
+
+      const { Answer } = await response.json();
+      // La respuesta incluye la cadena CNAME completa: nos quedamos solo
+      // con los registros del tipo consultado.
+      const answers = (Answer ?? []).filter(
+        (answer) => answer.type === TYPE_CODES[type],
+      );
+      if (!answers.length) continue;
+
+      let values;
+      if (type === `MX`) {
+        values = answers.map((answer) => {
+          const [preference, ...exchange] = String(answer.data).split(` `);
+          return `${exchange.join(` `)} (Preference: ${preference})`;
+        });
+      } else if (type === `TXT`) {
+        values = answers.map((answer) => stripTxtQuotes(answer.data));
+      } else {
+        values = answers.map((answer) => String(answer.data));
       }
 
-      if (Array.isArray(result[type][0])) {
-        result[type] = result[type].map((record) => {
-          const [...items] = record;
-          return items.join(" ");
-        });
-      }
-
-      if (typeof result[type][0] !== "string") {
-        result[type] = result[type].map((record) => {
-          const { exchange, preference } = record;
-          return `${exchange} (Preference: ${preference})`;
-        });
+      if (values.length) {
+        result[type] = values;
       }
     } catch (error) {
       //console.error(error);

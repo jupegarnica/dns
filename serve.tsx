@@ -14,4 +14,4 @@ app.use('/', async (c) => {
     return c.redirect('/garn.dev');
 });
 
-Deno.serve(app.fetch);
+export default app;

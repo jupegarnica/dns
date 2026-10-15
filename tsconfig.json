@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "types": []
+  },
+  "include": ["*.tsx", "*.jsx", "*.ts"]
+}
